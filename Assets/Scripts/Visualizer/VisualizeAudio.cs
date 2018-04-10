@@ -33,6 +33,14 @@ public class VisualizeAudio : MonoBehaviour
 			isPlaying = false;
 			ResetBars();
 		});
+
+		EventManager.AddListener(GlobalEvent.PlaybackDrag, () => {
+			isPlaying = false;
+		});
+
+		EventManager.AddListener(GlobalEvent.PlaybackDragEnd, () => {
+			isPlaying = true;
+		});
 	}
 
 
