@@ -1,0 +1,18 @@
+﻿public enum GlobalEvent {
+	PlaybackDrag,
+	PlaybackDragEnd,
+	PlaybackSliderClick,
+	SelectPlayListFile,
+	ReloadPlayList,
+	Play,
+	Pause,
+	Stop,
+	Next,
+	ActivateUIControls,
+	DisableUIControls,
+	PlayJustLoaded,
+	SoundOff,
+	SoundOn,
+	SoundOffFromSlider,
+	UpdatePlayListItems,
+}
