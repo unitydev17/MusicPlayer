@@ -35,22 +35,22 @@ public struct Util
 
 		StringBuilder sb = new StringBuilder();
 		string artists = string.Join("", tags.AlbumArtists);
-		if (MoreThanTwo(artists)) {
+		if (MoreThanOneSymbol(artists)) {
 			sb.Append(artists);
 		}
 
 		string performers = string.Join("", tags.Performers);
-		if (MoreThanTwo(performers)) {
+		if (MoreThanOneSymbol(performers) && !performers.Equals(artists)) {
 			sb.Append(sb.Length > 0 ? SPACING : string.Empty);
 			sb.Append(performers);
 		}
 
-		if (MoreThanTwo(tags.Title)) {
+		if (MoreThanOneSymbol(tags.Title)) {
 			sb.Append(sb.Length > 0 ? SPACING : string.Empty);
 			sb.Append(tags.Title);
 		}
 
-		if (MoreThanTwo(tags.Year.ToString())) {
+		if (MoreThanOneSymbol(tags.Year.ToString())) {
 			sb.Append(sb.Length > 0 ? SPACING : string.Empty);
 			sb.Append(tags.Year);
 		}
@@ -59,9 +59,9 @@ public struct Util
 	}
 
 
-	private static bool MoreThanTwo(string value)
+	private static bool MoreThanOneSymbol(string value)
 	{
-		return value != null && value.Length > 2;
+		return value != null && value.Length > 1;
 	}
 
 }

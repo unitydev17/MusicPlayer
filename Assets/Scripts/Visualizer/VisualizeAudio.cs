@@ -17,20 +17,24 @@ public class VisualizeAudio : MonoBehaviour
 	int channel;
 	Image[] bars;
 	bool isPlaying;
+	bool isPause;
 
 
 	void Awake()
 	{
 		EventManager.AddListener(GlobalEvent.Pause, () => {
 			isPlaying = false;
+			isPause = true;
 		});
 
 		EventManager.AddListener(GlobalEvent.Play, () => {
 			isPlaying = true;
+			isPause = false;
 		});
 
 		EventManager.AddListener(GlobalEvent.Stop, () => {
 			isPlaying = false;
+			isPause = false;
 			ResetBars();
 		});
 
@@ -40,6 +44,9 @@ public class VisualizeAudio : MonoBehaviour
 
 		EventManager.AddListener(GlobalEvent.PlaybackDragEnd, () => {
 			isPlaying = true;
+			if (isPause) {
+				isPlaying = false;
+			}
 		});
 	}
 
