@@ -112,7 +112,7 @@ public class PlayListController : BaseController
 	{
 		bool isCurrentTrackFound = false;
 
-		lock (model.playListItems) {
+//		lock (model.playListItems) {
 			foreach (PlayListItemModel item in model.playListItems) {
 				if (item.id == model.itemToPlay.id) {
 					isCurrentTrackFound = true;
@@ -120,13 +120,12 @@ public class PlayListController : BaseController
 				}
 			
 				if (isCurrentTrackFound) {
-					model.itemToPlayObj.GetComponent<Button>().interactable = true;
 					model.itemToPlay = item;
 					EventManager.FireEvent(GlobalEvent.UpdatePlayListItems);
-					break;
+					return;
 				}
 			}
-		}
+//		}
 		EventManager.FireEvent(GlobalEvent.Stop);
 	}
 
