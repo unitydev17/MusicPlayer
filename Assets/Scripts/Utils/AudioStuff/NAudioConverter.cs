@@ -13,7 +13,7 @@ using NAudio.Wave;
 
 public static class NAudioConverter
 {
-	public static AudioModel FromMp3DataModel(byte[] data)
+	public static AudioModel FromMp3DataModel(ref byte[] data)
 	{
 		AudioModel model = null;
 		MemoryStream mp3stream = null;
@@ -30,7 +30,8 @@ public static class NAudioConverter
 			waveStream = WaveFormatConversionStream.CreatePcmStream(mp3audio);
 			// Convert to WAV data
 			memoryStream = AudioMemStream(waveStream);
-			wav = new WAV(memoryStream.ToArray());
+			byte[] conversedData = memoryStream.ToArray();
+			wav = new WAV(ref conversedData);
 			Debug.Log(wav);
 
 			model = new AudioModel();
@@ -63,7 +64,7 @@ public static class NAudioConverter
 
 	public static AudioClip FromMp3Data(byte[] data)
 	{
-		AudioModel model = FromMp3DataModel(data);
+		AudioModel model = FromMp3DataModel(ref data);
 		AudioClip audioClip = AudioClip.Create(model.name, model.lengthSamples, model.channel, model.frequency, model.stream);
 		audioClip.SetData(model.data, 0);
 		return audioClip;
@@ -122,7 +123,7 @@ public class WAV
 	public int Frequency { get; internal set; }
 
 
-	public WAV(byte[] wav)
+	public WAV(ref byte[] wav)
 	{
 
 		// Determine if mono or stereo
@@ -165,6 +166,8 @@ public class WAV
 			}
 			i++;
 		}
+
+		wav = null;
 	}
 
 

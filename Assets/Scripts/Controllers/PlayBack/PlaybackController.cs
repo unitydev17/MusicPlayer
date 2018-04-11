@@ -16,7 +16,8 @@ public class PlaybackController : BaseController
 		Idle,
 		Play,
 		Pause,
-		TimeSliderDrag
+		TimeSliderDrag,
+		TimeSliderDragPaused,
 	}
 
 
@@ -27,13 +28,12 @@ public class PlaybackController : BaseController
 
 
 	float duration;
-	string path;
 	float timeSliderValue;
 	Coroutine playCoroutine;
 	State state;
 	volatile bool clipLoadInProgress;
+	bool disableNextClip;	// used to prevent next clip loading while loading already is in progress
 	AudioModel audioModel;
-	string description;
 
 
 	#region subscribe for the events
@@ -71,6 +71,7 @@ public class PlaybackController : BaseController
 	{
 		EventManager.FireEvent(GlobalEvent.DisableUIControls);
 		clipLoadInProgress = true;
+		disableNextClip = true;
 		Thread t1 = new Thread(LoadClip);
 		t1.Start();
 		StartCoroutine(WaitClipLoading());
@@ -94,11 +95,10 @@ public class PlaybackController : BaseController
 		audioSource.time = 0;
 		timeSliderValue = 0;
 		state = State.Idle;
-		infoText.text = description;
+		infoText.text = Util.GetFileDescription(model.itemToPlay.path);
+
 		EventManager.FireEvent(GlobalEvent.ActivateUIControls);
 		EventManager.FireEvent(GlobalEvent.PlayJustLoaded);
-
-
 	}
 
 
@@ -108,12 +108,14 @@ public class PlaybackController : BaseController
 		var path = model.itemToPlay.path;
 		if (File.Exists(path)) {
 			byte[] data = File.ReadAllBytes(path);
-			model.audioModel = Util.isMP3(path) ? NAudioConverter.FromMp3DataModel(data) : OpenWavParser.ByteArrayToAudioClipModel(data);
+			if (model.audioModel != null) {
+				model.audioModel.data = null;
+			}
+			model.audioModel = Util.isMP3(path) ? NAudioConverter.FromMp3DataModel(ref data) : OpenWavParser.ByteArrayToAudioClipModel(data);
+			//Debug.Log("LoadClip -> AudioModel :" + model.audioModel);
 		} else {
 			throw new UnityException("File not exists: " + path);
 		}
-
-		description = Util.GetFileDescription(path);
 		clipLoadInProgress = false;
 	}
 
@@ -124,9 +126,13 @@ public class PlaybackController : BaseController
 			audioSource.Pause();
 			StopCoroutine(playCoroutine);
 			state = State.TimeSliderDrag;
-		} 
+		}
 
-		if (State.TimeSliderDrag == state) {
+		if (State.Pause == state) {
+			state = State.TimeSliderDragPaused;
+		}
+
+		if (State.TimeSliderDrag == state || State.TimeSliderDragPaused == state) {
 			UpdateDragTimeInfo();
 		}
 	}
@@ -137,14 +143,24 @@ public class PlaybackController : BaseController
 		if (State.TimeSliderDrag == state) {
 			OnPlay();
 		}
+
+		if (State.TimeSliderDragPaused == state) {
+			state = State.Pause;
+		}
 	}
 
 
 	public void OnPlay()
 	{
+		disableNextClip = false;
+
 		state = State.Play;
 		audioSource.Play();
 		audioSource.time = timeSliderValue * duration;
+
+		if (playCoroutine != null) {
+			StopCoroutine(playCoroutine);
+		}
 		playCoroutine = StartCoroutine(TimeControl());
 	}
 
@@ -176,7 +192,10 @@ public class PlaybackController : BaseController
 
 		state = State.Idle;
 		ResetTimeSlider();
-		EventManager.FireEvent(GlobalEvent.Next);
+
+		if (!disableNextClip) {
+			EventManager.FireEvent(GlobalEvent.Next);
+		}
 	}
 
 

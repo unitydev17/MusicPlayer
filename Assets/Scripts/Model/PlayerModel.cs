@@ -54,13 +54,18 @@ public class PlayerModel
 	}
 
 
-	public void SetItemToPlay(int id)
+	private void SetItemToPlay(int id)
 	{
 		foreach (PlayListItemModel item in playListItems) {
 			if (id == item.id) {
 				itemToPlay = item;
 			}
 		}
+	}
+
+	public void SetCurrentItem(GameObject itemObj) {
+		SetItemToPlay(itemObj.GetInstanceID());
+		itemToPlayObj = itemObj;
 	}
 
 
