@@ -16,47 +16,38 @@ public static class NAudioConverter
 	public static AudioModel FromMp3DataModel(ref byte[] data)
 	{
 		AudioModel model = null;
-		MemoryStream mp3stream = null;
-		Mp3FileReader mp3audio = null;
-		WaveStream waveStream = null;
-		MemoryStream memoryStream = null;
-		WAV wav = null;
 
 		try {
 			// Load the data into a stream
-			mp3stream = new MemoryStream(data);
-			// Convert the data in the stream to WAV format
-			mp3audio = new Mp3FileReader(mp3stream);
-			waveStream = WaveFormatConversionStream.CreatePcmStream(mp3audio);
-			// Convert to WAV data
-			memoryStream = AudioMemStream(waveStream);
-			byte[] conversedData = memoryStream.ToArray();
-			wav = new WAV(ref conversedData);
-			Debug.Log(wav);
-
-			model = new AudioModel();
-			model.name = "temp";
-			model.lengthSamples = wav.SampleCount;
-			model.channel = 1;
-			model.frequency = wav.Frequency;
-			model.stream = false;
-			model.data = wav.LeftChannel;
-
-		} finally {
+			using (MemoryStream mp3stream = new MemoryStream(data)) {
 			
-			if (mp3stream != null) {
-				mp3stream.Dispose();
+				// Convert the data in the stream to WAV format
+				using (Mp3FileReader mp3audio = new Mp3FileReader(mp3stream)) {
+				
+					// Load the data into a stream
+					using (WaveStream waveStream = WaveFormatConversionStream.CreatePcmStream(mp3audio)) {
+
+						// Convert to WAV data
+						using (MemoryStream memoryStream = AudioMemStream(waveStream)) {
+
+							byte[] conversedData = memoryStream.ToArray();
+							WAV wav = new WAV(ref conversedData);
+							Debug.Log(wav);
+
+							model = new AudioModel();
+							model.name = "temp";
+							model.lengthSamples = wav.SampleCount;
+							model.channel = 1;
+							model.frequency = wav.Frequency;
+							model.stream = false;
+							model.data = wav.LeftChannel;
+
+						}
+					}
+				}
 			}
-			if (mp3audio != null) {
-				mp3audio.Dispose();
-			}
-			if (waveStream != null) {
-				waveStream.Dispose();
-			}
-			if (memoryStream != null) {
-				memoryStream.Dispose();
-			}
-			data = null;
+		} catch (Exception e) {
+			Debug.Log(e.Message);
 		}
 		return model;
 	}
@@ -78,7 +69,7 @@ public static class NAudioConverter
 			byte[] bytes = new byte[waveStream.Length]; 
 			waveStream.Position = 0;
 			waveStream.Read(bytes, 0, Convert.ToInt32(waveStream.Length)); 
-			waveFileWriter.Write(bytes, 0, bytes.Length); 
+			waveFileWriter.Write(bytes, 0, bytes.Length);
 			waveFileWriter.Flush(); 
 		}
 		return outputStream;
@@ -125,7 +116,6 @@ public class WAV
 
 	public WAV(ref byte[] wav)
 	{
-
 		// Determine if mono or stereo
 		ChannelCount = wav[22];     // Forget byte 23 as 99.999% of WAVs are 1 or 2 channels
 
@@ -142,11 +132,12 @@ public class WAV
 			pos += 4 + chunkSize;
 		}
 		pos += 8;
-
 		// Pos is now positioned to start of actual sound data.
 		SampleCount = (wav.Length - pos) / 2;     // 2 bytes per sample (16 bit sound mono)
 		if (ChannelCount == 2)
 			SampleCount /= 2;        // 4 bytes per sample (16 bit stereo)
+
+		Debug.Log("IN");
 
 		// Allocate memory (right will be null if only mono sound)
 		LeftChannel = new float[SampleCount];
@@ -154,6 +145,8 @@ public class WAV
 			RightChannel = new float[SampleCount];
 		else
 			RightChannel = null;
+
+		Debug.Log("OUT");
 
 		// Write to double array/s:
 		int i = 0;
@@ -166,8 +159,6 @@ public class WAV
 			}
 			i++;
 		}
-
-		wav = null;
 	}
 
 

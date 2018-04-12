@@ -84,19 +84,22 @@ public class PlaybackController : BaseController
 			yield return null;
 		}
 
-		//stop playback
-		//set audio clip after load
-		audioSource.Stop();
-		DestroyImmediate(audioSource.clip);
-		audioSource.clip = model.AudioModelToClip();
+		if (model.audioModel != null) {
 
-		// reset values
-		duration = audioSource.clip.length;
-		audioSource.time = 0;
-		timeSliderValue = 0;
-		state = State.Idle;
-		infoText.text = Util.GetFileDescription(model.itemToPlay.path);
+			//stop playback
+			//set audio clip after load
+			audioSource.Stop();
+			DestroyImmediate(audioSource.clip);
+			audioSource.clip = model.AudioModelToClip();
 
+			// reset values
+			duration = audioSource.clip.length;
+			audioSource.time = 0;
+			timeSliderValue = 0;
+			state = State.Idle;
+			infoText.text = Util.GetFileDescription(model.itemToPlay.path);
+
+		}
 		EventManager.FireEvent(GlobalEvent.ActivateUIControls);
 		EventManager.FireEvent(GlobalEvent.PlayJustLoaded);
 	}
@@ -106,13 +109,15 @@ public class PlaybackController : BaseController
 	void LoadClip()
 	{
 		var path = model.itemToPlay.path;
+
 		if (File.Exists(path)) {
 			byte[] data = File.ReadAllBytes(path);
+
 			if (model.audioModel != null) {
 				model.audioModel.data = null;
 			}
+
 			model.audioModel = Util.isMP3(path) ? NAudioConverter.FromMp3DataModel(ref data) : OpenWavParser.ByteArrayToAudioClipModel(data);
-			//Debug.Log("LoadClip -> AudioModel :" + model.audioModel);
 		} else {
 			throw new UnityException("File not exists: " + path);
 		}
